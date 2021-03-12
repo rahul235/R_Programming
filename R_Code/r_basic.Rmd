@@ -1,0 +1,546 @@
+---
+title: "Basic R functions"
+author: |
+  | "Kumar Rahul
+  |
+  | kumarrah@iimb.ac.in; rahul235@gmail.com
+output:
+  bookdown::html_document2:
+    toc: TRUE 
+    toc_depth: 4
+    toc_float: TRUE
+    fig_width: 7
+    fig_height: 5
+    fig_caption: TRUE
+    number_sections: TRUE
+footer: AwesomeStats Consulting Pvt Ltd
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+
+setwd("/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+```
+    
+# Basic of R
+
+The examples listed here are to make participants aware of the various features and functionality in R. Particpants can copy and run the example codes in RStudio and should try to interpret the outcome.
+
+## Read a csv file
+
+Read data from a csv file. This file contains body height, body weight, HR pulse, BP High and BP low of different patients admitted to a hospital
+
+Whenever, we read a data in R, it is read as Data Frame. You can verify the below one by passing command: `class(raw_df)`
+
+```{r readData, echo=TRUE}
+raw_df = read.csv('./files/data.csv')
+knitr::kable(head(raw_df))
+```
+
+## Calculate Mean
+```{r calMean, echo=TRUE}
+mean_weight = mean(raw_df$BODY.WEIGHT)
+cat("The mean weight of ", length(raw_df$BODY.WEIGHT),
+    "patients is", round(mean_weight,2), 
+    "\n") # This is an end-of-line character
+```
+
+## Calculate Standard Deviation
+```{r calSD, echo=TRUE}
+st_weight = sd(raw_df$BODY.WEIGHT)
+cat("The variation in weight of ", length(raw_df$BODY.WEIGHT),
+    "patients is", round(st_weight,2), 
+    "\n") # This is an end-of-line character
+```
+
+### Exercise
+
+**Modify the above code to calculate the mean height and variation of patients**
+
+## Correlation
+Corelation between height and weight
+```{r calCorr, echo=TRUE}
+cor_np = cor(raw_df$BODY.HEIGHT,raw_df$BODY.WEIGHT)
+cat("Correlation of height vs weight is", "\n",
+    round(cor_np, 2))
+```
+
+## User defined functions
+
+Here's how you write a function of your own. A function's graph is a pair (x, f(x))
+```{r polyFunction, echo=TRUE}
+# Simple polynomial
+funx = function(x) {
+  return (x^3 + 2*x^2 + sin(x) - 1)
+}
+
+# x coordinate for the pair
+xvals = seq(-3, 2, by=0.05)
+
+# Plot the function
+plot(xvals, funx(xvals),
+     main="Function plotting",
+     type="l", lwd=2, 
+     col="darkred",
+     xlab="x", ylab="f(x)")
+
+# Axes
+abline(v=0)
+abline(h=0)
+```
+
+## Create matrix - Optional
+
+Optional topic.
+```{r defineMatrix, echo=TRUE}
+# Create a matrix with names for rows and columns
+rownames = c("1st Row", "2nd Row")
+colnames = c("1st Col","2nd Col","3rd Col")
+A = matrix(c(1,2,3,4,5,6), nrow=2, 
+            dimnames=list(rownames, colnames))
+
+# Access rows and columns
+cat("The first row is", A[1, ], "\n")
+cat("The second column is", A[, 2], "\n")
+
+# Submatrices
+B = A[, c(2,3)]
+print(B)
+```
+
+Here's an easy way to build a matrix of any order
+
+* If m = no. of rows, n = no. of cols, then order = mn
+
+Let's build a 4 x 5 matrix now
+```{r matrixColfill, echo=TRUE}
+C = matrix(c(1:20), nrow=4)
+cat("Column-wise filled 4 x 5 matrix is...\n")
+print(C)
+```
+
+Let's fill the entries row-wise
+```{r matrixRowfill, echo=TRUE}
+D = matrix(c(1:20), nrow=4, byrow=TRUE)
+cat("Row-wise filled 4 x 5 matrix is...\n")
+print(D)
+```
+
+```{r array, echo=TRUE}
+# Let's now build an array of 60 elements
+E = array(c(1:60), dim=c(3,4,5))
+
+# Watch what happens when you print this out!
+cat("Contents of 3 x 4 x 5 array\n")
+print(E)
+```
+
+## Plot - Scatterplot
+
+Here's a plot for body height vs body weight. ggplot gives more flexibility and is easy to use compared to the basic plot function which we have used here.
+```{r plot1, echo=TRUE}
+#first plot
+plot_1 = function(raw_df) {
+  plot(raw_df$BODY.HEIGHT,raw_df$BODY.WEIGHT,
+       type = "p",
+       pch=.1, #controls the shape
+       cex=.3,#controls the size
+       col=c("red"),
+       main="Height vs. Weight",
+       xlab = "Height",
+       ylab = "Weight")
+}
+
+plot_1(raw_df)
+```
+
+Plot of BP high and BP low
+```{r plot2, echo=TRUE}
+plot_2 = function(raw_df) {
+  plot(raw_df$BP..HIGH,raw_df$BP.LOW,
+       type = "p",
+       pch=1, #controls the shape
+       cex=.3,#controls the size
+       col=c("blue"),
+       main="BP High vs. BP Low",
+       xlab = "BP High",
+       ylab = "BP Low")
+  legend("topright", # places a legend at the appropriate place
+         c("high","low"), # puts text in the legend
+         pch=1, #controls the shape
+         cex=.3,#controls the size,
+         col=c("blue"))
+}
+plot_2(raw_df)
+```
+
+### Plot in Same window - Optional
+
+More about `par()` at https://www.rdocumentation.org/packages/graphics/versions/3.5.1/topics/par
+```{r plotCombined, echo=TRUE}
+par(mfrow=c(1,2)) # set the plotting area into a 1*2 array
+plot_1(raw_df)
+plot_2(raw_df)
+```
+
+## JSON file
+
+Reading a JSON column in a csv file
+```{r}
+df <- data.frame(name = "Test1",
+           published_date = "1151367060",
+           ratings ="[{'id': 7, 'name': 'Funny', 'count': 19645}, {'id': 1, 'name': 'Beautiful', 'count': 4573}, {'id': 9, 'name': 'Ingenious', 'count': 6073}, {'id': 3, 'name': 'Courageous', 'count': 3253}, {'id': 11, 'name': 'Longwinded', 'count': 387}, {'id': 2, 'name': 'Confusing', 'count': 242}, {'id': 8, 'name': 'Informative', 'count': 7346}, {'id': 22, 'name': 'Fascinating', 'count': 10581}, {'id': 21, 'name': 'Unconvincing', 'count': 300}, {'id': 24, 'name': 'Persuasive', 'count': 10704}, {'id': 23, 'name': 'Jaw-dropping', 'count': 4439}, {'id': 25, 'name': 'OK', 'count': 1174}, {'id': 26, 'name': 'Obnoxious', 'count': 209}, {'id': 10, 'name': 'Inspiring', 'count': 24924}]",
+           stringsAsFactors = FALSE)
+
+knitr::kable(df)
+```
+
+Seperate the key value pairs
+
+```{r message=FALSE, warning=FALSE}
+library(jsonlite)
+library(dplyr)
+library(tidyr)
+
+listed_df =  mutate(df,
+    # replace single quote
+    ratings = gsub("'", "\"", ratings),
+    # create a list column with the result
+    ratings= list(jsonlite::fromJSON(ratings))
+  ) 
+new_df = unnest(listed_df)
+
+```
+
+## Reading multiple files
+
+```{r readMultipleFiles, echo=TRUE}
+setwd("/Users/Rahul/Documents/Datasets")
+temp = list.files(pattern="*.csv")
+myfiles = lapply(temp, read.csv)
+knitr::kable(head(myfiles[[1]]))
+```
+
+
+```{r}
+a_df = myfiles[[1]]
+knitr::kable(head(a_df))
+
+b_df = myfiles[[2]]
+knitr::kable(head(b_df))
+```
+
+
+# Summarize Stock Market Data
+
+We will use pfizer data in this section.
+
+* Install the lubridate package
+* Open pfizer_df data: https://in.finance.yahoo.com/quote/PFE/
+* Read daily data from 1st June 1972 to Current Date. Download as csv
+
+```{r loadData, echo=TRUE, message=FALSE, warning=FALSE}
+library(lubridate)
+pfizer_df = read.csv('./files/PFE.csv', header=TRUE)
+```
+
+## Head and Tail function
+
+The first six observations
+```{r printHead, echo=TRUE}
+knitr::kable(head(pfizer_df))
+```
+
+The last six observations
+```{r printTail, echo=TRUE}
+knitr::kable(tail(pfizer_df))
+```
+
+## Structure of Data
+```{r}
+str(pfizer_df)
+```
+
+## Typecasting
+
+R treats the Date field as factor. Need to convert this into Date type
+```{r typeCast, echo=TRUE}
+print(paste("The initial type of Date is", class(pfizer_df$Date)))
+print("Converting the Date column to date type")
+pfizer_df$Date = as.Date(pfizer_df$Date, "%Y-%m-%d")
+```
+
+## Create new variable
+
+Create month and year as two new columns.
+```{r printData, echo=TRUE}
+pfizer_df$Month = as.factor(month(pfizer_df$Date))
+pfizer_df$Year = year(pfizer_df$Date)
+```
+
+## Summary Statistics
+```{r}
+summary(pfizer_df)
+```
+
+
+## Cross Tabulation
+
+table uses the cross-classifying factors to build a contingency table of the counts at each combination of factor levels.
+```{r counts, echo=TRUE}
+table(pfizer_df$Month)
+```
+
+## Subset data
+```{r subsetData2, echo=TRUE}
+May2017 = subset(pfizer_df,
+                    Month == 5 & 
+                    Year == 2017,
+                    select = c(Date, Adj.Close))
+knitr::kable(head(May2017))
+```
+
+## Plot the data
+
+Graph the time series, using plot function. Better option is to use ggplot package.
+```{r graphData, echo=TRUE}
+oldPars = par(no.readonly=TRUE)
+par(bg="white")
+par(lty="solid")
+
+with(May2017, {
+  plot(Date, Adj.Close, 
+       col="red",
+       xlab="Month",
+       las=1,
+       pch=20) # symbol type
+  lines(Date, Adj.Close, col="navy")
+  title("pfizer_df's Stock Activity for May 2017")
+})
+```
+
+Restore the old parameter settings
+```{r restoregraphParameters1, echo=TRUE}
+par(oldPars)
+```
+
+
+## Exercise
+
+* Open apple_df data: https://in.finance.yahoo.com/quote/AAPL/.
+* Read daily data from 12/12/1980 till Current Date. Download as csv.
+* Apply all the functions learned in this section.
+* Plot the trend for Ajd.Close for Feb2016.
+
+## Overlay two plots - Optional
+
+**Optional topic**. We will use the pfizer_df data for the demo.
+
+Step 1: Focus on April stock activities for two years. Express it as a classic time series
+```{r overlayChart, echo=TRUE}
+Apr2017 = subset(pfizer_df,
+                    month(Date) == 4 & 
+                    year(Date) == 2017,
+                    select = c(Date, Adj.Close))
+
+Apr2016 = subset(pfizer_df,
+                  month(Date) == 4 & 
+                  year(Date) == 2016,
+                  select = c(Date, Adj.Close))
+
+knitr::kable(head(Apr2017))
+knitr::kable(head(Apr2016))
+```
+
+Step 2: Set the options for the plot, after making a copy of the old settings
+```{r restoregraphParameters2, echo=TRUE}
+oldPars = par(no.readonly=TRUE)
+```
+
+Step 3: Graph the two time series
+```{r graphTimeSeries, echo=TRUE}
+par(lty="solid")
+with(Apr2017, {
+  plot(day(Date), Adj.Close,
+       las=1,
+       xlim=c(0, 30),
+       ylim=c(30, 35),
+       xlab="Day of Month",
+       ylab="Adjusted Close Price",
+       type="b",
+       col="darkgreen",
+       pch=20) # symbol type
+  title("A Tale of Two Aprils (pfizer_df)")
+})
+
+#Prompt to overlay the second plot
+par(new=TRUE)
+
+with(Apr2016, {
+  plot(day(Date), Adj.Close,
+       xlim=c(0, 30),
+       ylim=c(30,35), # Must be the same as earlier
+       ann=FALSE, # Suppress annotating the axes
+       axes=FALSE,
+       type="b",
+       col="brown",
+       cex=0.7,
+       pch=17) # symbol type
+})
+
+
+#Now add a legend
+legend("topright",
+       c("2017","2016"),
+       pch=c(20, 17),
+       col=c("darkgreen", "brown"))
+```
+
+Step 4: Restore the old parameter settings
+```{r restoregraphParameters3, echo=TRUE}
+par(oldPars)
+```
+
+## Time Series Plot
+
+We will use pfizer_df data for Time Series plot
+```{r timeSeries, echo=TRUE, message=FALSE, warning=FALSE}
+library(lubridate) # Date manipulation
+library(xts)   # For time series manipulation
+
+pfizer_df$Date = as.Date(pfizer_df$Date, "%Y-%m-%d")
+PFE = pfizer_df[,c("Date", "Adj.Close")]
+PFE_TS = xts(PFE[,-1], order.by=as.Date(PFE[,1], "%m/%d/%Y"))
+plot(PFE_TS,
+     main="pfizer_df Stock over the years",
+     col = "red")
+```
+
+
+## apply functions
+
+**apply()**, operates on arrays (for simplicity we limit here to 2D arrays, aka, matrices). If a dataframe is passed it will be coerced to array via as.matrix
+
+We will use pfizer_df data to get the mean of data
+
+```{r applyFunction, echo=TRUE}
+pfizer_subset_df = pfizer_df[,c(2:7)]
+apply(pfizer_subset_df, 2, mean) #1 for row, 2 for col
+
+```
+
+### lapply
+
+**lapply()** function is applied for operations on list objects and returns a list object of same length of original set.
+
+lapply function in R, returns a list of the same length as input list object, each element of which is the result of applying FUN to the corresponding element of list. If a dataframe is passed it will be coerced to list via as.list
+
+```{r lapplyFunction, echo=TRUE}
+class(lapply(pfizer_subset_df, mean))
+lapply(pfizer_subset_df, mean)
+```
+
+### lapply with user defined function
+
+A user defined function to plot a data.
+```{r plotFun, echo=TRUE}
+plot_fun = function(input)
+  plot(input, col = 'blue',
+       main = paste("plot of", names(input), sep = "-"))
+```
+
+Let us plot Closed and Adjusted Closed Values of Pfizer.
+```{r applywithUserFun, echo=TRUE}
+library(xts)
+PFE = pfizer_df[,c("Date", "Close","Adj.Close")]
+PFE_TS = xts(PFE[,-1], order.by=as.Date(PFE[,1], "%m/%d/%Y"))
+lapply(PFE_TS, plot_fun)
+```
+
+### sapply
+
+**sapply()** is wrapper class to lapply with difference being it returns vector or matrix instead of list object.
+```{r sapplyFunction, echo=TRUE}
+#class(sapply(pfizer_df_subset_df, mean))
+sapply(pfizer_subset_df, mean)
+```
+
+### tapply
+
+tapply() is a very powerful function that lets you break a vector into pieces and then apply some function to each of the pieces. 
+
+In the below code, first each of Adj.Close in pfizer_df data is grouped by Month and then mean() function is calculated.
+
+```{r tapplyFunction, echo=TRUE}
+tapply(pfizer_df$Adj.Close,pfizer_df$Month, mean)
+```
+
+The data type of the object is
+
+```{r tapplyClass, echo=TRUE}
+class(tapply(pfizer_df$Adj.Close,pfizer_df$Month, mean))
+```
+
+## Central Limit Theorem
+
+**This is optional topic.** We will use the pfizer_df data for the demo.
+```{r CltCalculateReturn, echo=TRUE}
+#Calculating Monthly return as a random variable
+nrows = nrow(pfizer_df)
+returns = c()
+Closes = pfizer_df$Adj.Close
+for (i in 1:(nrows-1)) {
+  returns[i+1] = (Closes[i+1] - Closes[i]) / Closes[i]
+}
+returns[1] = returns[2]
+pfizer_df$Return = returns
+```
+
+
+```{r CltPlot, echo=TRUE, message=FALSE, warning=FALSE}
+library(car) #for qqPlot
+#To show normal distribution using pfizer_df data
+
+par(mfrow=c(1,3)) # to make three plot on same row
+hist(pfizer_df$Adj.Close,
+     breaks = 30,
+     col = colors()[30:50],
+     main = "Monthly Closes of PFE",
+     xlab = "Adj Close Price",
+     las = 1)
+
+#Plotting Monthly return
+hist(pfizer_df$Return,
+     breaks = 30,
+     col = colors()[30:50],
+     main = "Monthly Closes of PFE",
+     xlab = "Monthly Return",
+     las = 1)
+
+qqPlot(pfizer_df$Return,
+       main = "Are the return normal",
+       pch = 20, cex = 0.7, col="navy")
+```
+
+See the observation with return actually zero
+
+```{r return0, echo=TRUE}
+knitr::kable(head(subset(pfizer_df, pfizer_df$Return == 0)))
+```
+
+See the observation of the return between plus/minus one sigma
+
+```{r plusminusSigma, echo=TRUE}
+mu = mean(pfizer_df$Return)
+sigma = sd(pfizer_df$Return)
+knitr::kable(head(subset(pfizer_df,Return>= (mu-sigma) & Return <= (mu+sigma))))
+```
+
+Subset the data to get the records with return between 10 percent and 15 percent
+```{r return1015, echo=TRUE}
+knitr::kable(head(subset(pfizer_df,Return>= 0.1 & Return <= 0.15)))
+```
+
+## Thank you
+
+Practice on the exercises given and redo all the example codes given here using R.
