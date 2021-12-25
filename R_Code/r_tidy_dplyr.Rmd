@@ -1,0 +1,279 @@
+---
+title: "R Package for data clean up and aggregation"
+author: |
+  | "Kumar Rahul
+  |
+  | kumarrah@iimb.ac.in; rahul235@gmail.com
+output:
+  bookdown::html_document2:
+    toc: TRUE 
+    toc_depth: 4
+    toc_float: TRUE
+    fig_width: 7
+    fig_height: 5
+    fig_caption: TRUE
+    number_sections: TRUE
+footer: AwesomeStats Consulting Pvt Ltd
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+
+setwd("/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+```
+
+# R Packages for Data Manipulation
+
+The examples listed here are to make participants aware of the tidyverse packages (tidyR and dplyr). Particpants can copy and run the example codes in RStudio and should try to interpret the outcome.
+
+## Import Data
+
+We shall manipulate dates in this exercise
+
+* Install the lubridate package
+* Open Pfizer data: https://in.finance.yahoo.com/quote/PFE/
+* Read daily data from 1st June 1972 to Current Date. Download as csv
+    
+```{r loadData, echo=TRUE, message=FALSE, warning=FALSE}
+library(lubridate)
+pfizer_df = read.csv('./files/PFE.csv', header=TRUE)
+```
+
+Step 1: R treats the Date field as factor. Need to convert this into Date type
+
+```{r typeCast, echo=TRUE}
+print(paste("The initial type of Date is", class(pfizer_df$Date)))
+print("Converting the Date column to date type")
+pfizer_df$Date = as.Date(pfizer_df$Date, "%Y-%m-%d")
+```
+
+List the first and last few rows of the dataset
+```{r printData, echo=TRUE}
+pfizer_df$Day = as.factor(day(pfizer_df$Date))
+pfizer_df$Month = as.factor(month(pfizer_df$Date))
+pfizer_df$Year = year(pfizer_df$Date)
+
+print("The first five observation:")
+knitr::kable(head(pfizer_df))
+
+```
+
+## TidyR Package
+
+```{r tidyR, echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyr)
+```
+
+**tidyr** is new package that makes it easy to “tidy” your data. Tidy data is data that’s easy to work with: it’s easy to munge (with dplyr), visualise (with ggplot2 or ggvis) and model (with R’s hundreds of modelling packages). The two most important properties of tidy data are:
+
+  > Each column is a variable.
+  > Each row is an observation.
+  
+Arranging your data in this way makes it easier to work with because you have a consistent way of referring to variables (as column names) and observations (as row indices).
+
+More details about this package at:
+
+* https://blog.rstudio.com/2014/07/22/introducing-tidyr/ 
+* https://r4ds.had.co.nz/tidy-data.html#introduction-6
+
+We will understand the usage of the following four functions from the tidyr package:
+
+* gather() – converts wide data to longer format. It is analogous to the melt function from reshape2 or pivot in spreadsheet.
+* spread() – converts long data to wider format. It is analogous to the cast function from reshape2 or unpivot in spreadsheet.
+* unite() – combines two or more columns into a single column.
+* separate() – splits one column into two or more columns.
+
+### TidyR Package (gather)
+
+The first step is always to figure out what the variables and observations are. Sometimes this is easy; other times you’ll need to consult with the people who originally generated the data. 
+
+The second step is to resolve one of two common problems:
+
+* One variable might be spread across multiple columns. 
+* One observation might be scattered across multiple rows.
+
+Typically a dataset will only suffer from one of these problems. To fix these problems, the two most important functions in tidyr: `gather()` and `spread()`.
+
+Create a data.frame which represents adminstering two different drugs **drug_A** and **drug_B**. The patient **heartrate** is observed in both cases.
+
+```{r, echo=TRUE}
+messy = data.frame(
+  name = c("Rohit", "Manish", "Rahul"),
+  drug_A = c(70, 80, 64), #heartrate with drug a
+  drug_B = c(56, 90, 50)  #heartrate with drug b
+)
+knitr::kable(messy)
+```
+
+There are three variables (name, drug and heartrate), but only name is currently in a column. To tidy a dataset like this, we need to gather those columns into a new pair of variables. To describe that operation two parameters are needed:
+
+* The set of columns that represent values, not variables. In this example, columns **drug_A** and **drug_B** are actually values and not variable.
+* The name of the variable whose values form the column names. This is called as key and here it is **drug**.
+* The name of the variable whose values are spread over the cells. This is called as value and here it’s **heartrate**.
+
+gather() will be used to gather the **drug_A** and **drug_B** columns into key-value pairs of **drug** and **heartrate**:
+
+```{r, echo=TRUE}
+clean = gather(messy, key = 'drug', value = 'heartrate', 'drug_A','drug_B')
+knitr::kable(clean)
+```
+
+### TidyR Package (spread)
+
+Spreading is the opposite of gathering. It can be used when an observation is scattered across multiple rows.
+
+Create a data.frame where number of crimes and population of the country is recorded for different years.
+
+```{r, echo=TRUE}
+messy = data.frame(
+  country = c("India","India","India","India","Brazil","Brazil","Brazil","Brazil"),
+  year = c(1999,1999,2000,2000,1999,1999,2000,2000),
+  type = c("cases","population","cases","population","cases","population","cases","population"),
+  count = c(745,19987071,2666,20595360,37737,172006362,40020,201006762)
+)
+knitr::kable(messy)
+```
+
+To tidy this up, two parameters are needed:
+
+* The column that contains variable names, the key column. Here, it’s type.
+* The column that contains values from multiple variables, the value column. Here it’s
+count.
+
+```{r, echo=TRUE}
+clean = spread(messy, key = 'type', value = 'count')
+
+knitr::kable(clean)
+```
+
+### TidyR Package (seperate)
+
+separate() pulls apart one column into multiple columns, by splitting wherever a separator character appears.
+
+Create a data.frame where number of crimes and population of the country is recorded for different years.
+
+```{r, echo=TRUE}
+messy = data.frame(
+  country = c("India","India","Brazil","Brazil"),
+  year = c(1999,2000,1999,2000),
+  rate = c('745,19987071','2666,20595360','37737,172006362','40020,201006762')
+)
+knitr::kable(messy)
+```
+
+The rate column contains both cases and population variables which needs to be split into two variables. separate() takes the name of the column to separate, and the names of the columns to separate into
+
+```{r, echo=TRUE}
+clean = messy %>% 
+  separate('rate', into = c("cases", "population"), convert = FALSE)
+
+knitr::kable(clean)
+```
+
+By default, separate() will split values wherever it sees a non-alphanumeric character (i.e. a character that isn’t a number or letter)
+
+### TidyR Package (unite)
+
+unite() is the inverse of separate(): it combines multiple columns into a single column.
+
+```{r, echo=TRUE}
+unite_clean = clean %>% unite('rate',
+  'cases','population',sep = "/")
+knitr::kable(unite_clean)
+```
+
+## dplyr package
+
+Dplyr aims to provide a function for each basic verb of data manipulation:
+
+* filter() to select cases based on their values.
+* arrange() to reorder the cases.
+* select() and rename() to select variables based on their names.
+* mutate() and transmute() to add new variables that are functions of existing variables.
+* summarise() to condense multiple values to a single value.
+* sample_n() and sample_frac() to take random samples.
+    
+### dplyr package (filter)
+
+filter() allows to select a subset of rows in a data frame. 
+
+* The first argument is the tibble (or data frame). 
+* The second and subsequent arguments refer to variables within that data frame, selecting rows where the expression is TRUE.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(dplyr)
+filter_df = pfizer_df %>% filter(Month == 6, Year == 2014)
+knitr::kable(head(filter_df))
+```
+
+### dplyr package (arrange)
+
+arrange() works similarly to filter() except that instead of filtering or selecting rows, it reorders them.If more than one column name is provided, each additional column is used to break ties in the values of preceding columns:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(dplyr)
+arrange_df = pfizer_df %>% arrange(High)
+knitr::kable(head(arrange_df))
+```
+
+### dplyr package (select)
+
+select() allows to rapidly zoom in on a useful subset using operations that usually only work on numeric variable positions.
+
+There are a number of helper functions you can use within select(), like starts_with(), ends_with(), matches() and contains()
+
+```{r echo=TRUE, message=FALSE, warning=TRUE}
+library(dplyr)
+select_df = select(pfizer_df,Date, starts_with('A'))
+knitr::kable(head(select_df))
+```
+
+### dplyr package (mutate)
+
+Besides selecting sets of existing columns, it’s often useful to add new columns that are functions of existing columns. This is the job of mutate():
+
+```{r, echo=TRUE}
+mutate_df = pfizer_df %>% mutate(sqr_adj_close = Adj.Close^2,
+                                 log_volume = log(Volume))
+knitr::kable(head(mutate_df))
+```
+
+If you only want to keep the new variables, use transmute():
+
+### dplyr package (combine multiple operation)
+
+```{r, echo=TRUE}
+combine_df = pfizer_df %>% 
+  select(Date, Adj.Close, Volume, Year, Month) %>%
+  filter(Year == 2008 ,Month == 6) %>%
+  mutate(sqr_adj_close = Adj.Close^2,
+         log_volume = log(Volume))
+
+knitr::kable(head(combine_df))
+```
+
+### plyr package (group_by and summarise operation)
+
+```{r, echo=TRUE}
+library(ggplot2)
+by_month = group_by(pfizer_df, Month)
+
+pfizer_summary = summarise(by_month,
+  count = n(),
+  avg_month = mean(Adj.Close, na.rm = TRUE),
+  sd_month = sd(Adj.Close, na.rm = TRUE))
+
+ggplot(pfizer_summary, aes(avg_month, sd_month)) +
+  geom_point(aes(color = count), alpha = 1/2) +
+  geom_smooth() +
+  scale_size_area()
+```
+
+### Exercise - dplyr package
+
+group pfizer by multiple variables and take daily, monthly and week count of pfizer data.
+
+## Thank you
+
+Practice on the exercises given and redo all the example codes given here using R.
+

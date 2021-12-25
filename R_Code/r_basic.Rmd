@@ -1,0 +1,265 @@
+---
+title: "Basic R Syntax"
+author: |
+  | "Kumar Rahul
+  |
+  | kumarrah@iimb.ac.in; rahul235@gmail.com
+output:
+  bookdown::html_document2:
+    toc: TRUE 
+    toc_depth: 4
+    toc_float: TRUE
+    fig_width: 7
+    fig_height: 5
+    fig_caption: TRUE
+    number_sections: TRUE
+footer: AwesomeStats Consulting Pvt Ltd
+---
+
+### Declaring and assigning a variable
+
+```{r}
+a = 5
+```
+
+```{r}
+class(a)
+```
+
+```{r}
+a  = "This is a string"
+```
+
+```{r}
+class(a)
+```
+
+## Printing values of a variable
+
+```{r}
+print(a)
+```
+
+### Conditional Statement
+
+```{r}
+a = 5
+
+if (a > 4) {
+    print("True")
+} else {
+    print("False")
+}
+```
+
+### Range of numbers
+
+```{r}
+print(1:10)
+
+seq(1,10,1)
+
+```
+
+```{r}
+listOfNums = list(1:10)
+typeof(listOfNums)
+```
+
+```{r}
+
+Reduce('+',unlist(listOfNums))
+
+```
+
+```{r}
+sum = 0
+for (i in seq(1,10)){
+        sum = sum + listOfNums[[1]][i]
+}
+```
+
+```{r}
+sum
+```
+
+```{r}
+sum = 0
+i = 0
+while (i <= 10){
+    sum = sum + i
+    i = i + 1
+}
+```
+
+```{r}
+sum
+```
+
+### Defining Function
+
+```{r}
+multiply = function( a, b){
+    return (a*b)
+}
+```
+
+```{r}
+multiply(4,5)
+```
+
+```{r}
+addNumbers = function(a, b){
+    return (a + b)
+}
+```
+
+```{r}
+addNumbers(4, 5)
+```
+
+```{r}
+addNumbers(2.444, 5.6)
+```
+
+```{r}
+addNumbers(c(1,3), c(4,5))
+```
+
+### Parameters optional
+
+```{r}
+addNumbers = function(a, b = 4){
+    return (a + b)
+}
+```
+
+```{r}
+addNumbers(4)
+```
+
+```{r}
+c = addNumbers(4, 3)
+```
+
+```{r}
+c
+```
+
+
+## Collections
+
+### List
+
+* Vector in R is created by using c() or seq().
+* The list() in R is used to create a list whose elements can be of any type i.e. numeric, character, matrix, or a list/vector itself.
+
+```{r}
+# Empty List
+a = list()
+```
+
+```{r}
+class(a)
+```
+
+```{r}
+## List initialized
+a = list(1,2,3,4,5)
+```
+
+```{r}
+a[1]
+```
+
+```{r}
+a[1:4]
+```
+
+#### Reversing a list
+
+```{r}
+a= rev(a)
+```
+
+```{r}
+a
+```
+
+Create a list called b, which contains square value of each element in a.
+
+```{r}
+b = list()
+for(i in seq(1, length(a),1)){
+    b = (append(b, a[[i]]*a[[i]]))
+}
+```
+
+```{r}
+b
+```
+
+## Use of filter, map and reduce
+
+* The Map() function takes in a function and a list as argument. The function is called with a anonymous function and a list. Map returns a new list which contains all the anonymous modified items returned by that function for each item.
+
+Let's use the anonymous function to square the number contained in the list `a`
+
+```{r}
+a = seq(1,10)
+a
+```
+
+```{r}
+list_squared = Map(function (x) x^2, a)
+print(list_squared)
+```
+
+* The Filter() function construct is like the map function but is used filter out the elements of a sequence, for which the function returns True. Here is a small program that returns the odd numbers from an input list:
+
+```{r}
+list_odds = Filter(function (x) x%%2!=0, a)
+print(list_odds)
+```
+
+```{r}
+list_filter = Filter(function(x) (x > 4) & (x < 7), a)
+list_filter
+```
+
+* The reduce() function also takes in a function and a list as argument. This function can also be called with an anonymous function and a list.The output will be a new reduced result. This performs a repetitive operation over the pairs of the list.
+
+```{r}
+reduce_sum = Reduce(function (x,y) x+y, a)
+reduce_sum
+```
+
+### Set
+
+```{r}
+a = c(1,2,3,4,3,6,7,3,2)
+```
+
+```{r}
+a
+```
+
+```{r}
+d = union(a,a)
+```
+
+```{r}
+d
+```
+
+intersect, setdiff, setequal are other useful functions for set operations in R.
+
+### Strings
+
+```{r}
+str1 = "this is a string"
+```
+
+```{r}
+str2 = 'this is a string'
+```

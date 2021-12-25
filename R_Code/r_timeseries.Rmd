@@ -1,0 +1,243 @@
+---
+title: "Time Series Data"
+author: |
+  | "Kumar Rahul
+  |
+  | kumarrah@iimb.ac.in; rahul235@gmail.com
+output:
+  bookdown::html_document2:
+    toc: TRUE 
+    toc_depth: 4
+    toc_float: TRUE
+    fig_width: 7
+    fig_height: 5
+    fig_caption: TRUE
+    number_sections: TRUE
+footer: AwesomeStats Consulting Pvt Ltd
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+
+setwd("/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+```
+
+# Summarize Stock Market Data
+
+The examples listed here are to make participants aware of the various features and functionality in R. Particpants can copy and run the example codes in RStudio and should try to interpret the outcome. We will use pfizer data in this section.
+
+* Install the lubridate package
+* Open pfizer_df data: https://in.finance.yahoo.com/quote/PFE/
+* Read daily data from 1st June 1972 to Current Date. Download as csv
+
+```{r loadData, echo=TRUE, message=FALSE, warning=FALSE}
+library(lubridate)
+pfizer_df = read.csv('./files/PFE.csv', header=TRUE)
+```
+
+## Head and Tail function
+
+The first six observations
+```{r printHead, echo=TRUE}
+knitr::kable(head(pfizer_df))
+```
+
+The last six observations
+```{r printTail, echo=TRUE}
+knitr::kable(tail(pfizer_df))
+```
+
+## Structure of Data
+```{r}
+str(pfizer_df)
+```
+
+## Typecasting
+
+R treats the Date field as factor. Need to convert this into Date type
+```{r typeCast, echo=TRUE}
+print(paste("The initial type of Date is", class(pfizer_df$Date)))
+print("Converting the Date column to date type")
+pfizer_df$Date = as.Date(pfizer_df$Date, "%Y-%m-%d")
+```
+
+## Create new variable
+
+Create month and year as two new columns.
+```{r printData, echo=TRUE}
+pfizer_df$Month = as.factor(month(pfizer_df$Date))
+pfizer_df$Year = year(pfizer_df$Date)
+```
+
+## Summary Statistics
+```{r}
+summary(pfizer_df)
+```
+
+## Cross Tabulation
+
+table uses the cross-classifying factors to build a contingency table of the counts at each combination of factor levels.
+```{r counts, echo=TRUE}
+table(pfizer_df$Month)
+```
+
+## Subset data
+```{r subsetData2, echo=TRUE}
+May2017 = subset(pfizer_df,
+                    Month == 5 & 
+                    Year == 2017,
+                    select = c(Date, Adj.Close))
+knitr::kable(head(May2017))
+```
+
+## Exercise
+
+* Open apple_df data: https://in.finance.yahoo.com/quote/AAPL/.
+* Read daily data from 12/12/1980 till Current Date. Download as csv.
+* Apply all the functions learned in this section.
+* Plot the trend for Ajd.Close for Feb2016.
+
+## Time Series Plot
+
+We will use pfizer_df data for Time Series plot
+```{r timeSeries, echo=TRUE, message=FALSE, warning=FALSE}
+library(lubridate) # Date manipulation
+library(xts)   # For time series manipulation
+
+pfizer_df$Date = as.Date(pfizer_df$Date, "%Y-%m-%d")
+PFE = pfizer_df[,c("Date", "Adj.Close")]
+PFE_TS = xts(PFE[,-1], order.by=as.Date(PFE[,1], "%m/%d/%Y"))
+plot(PFE_TS,
+     main="pfizer_df Stock over the years",
+     col = "red")
+```
+
+
+## apply functions
+
+**apply()**, operates on arrays (for simplicity we limit here to 2D arrays, aka, matrices). If a dataframe is passed it will be coerced to array via as.matrix
+
+We will use pfizer_df data to get the mean of data
+
+```{r applyFunction, echo=TRUE}
+pfizer_subset_df = pfizer_df[,c(2:7)]
+apply(pfizer_subset_df, 2, mean) #1 for row, 2 for col
+
+```
+
+### lapply
+
+**lapply()** function is applied for operations on list objects and returns a list object of same length of original set.
+
+lapply function in R, returns a list of the same length as input list object, each element of which is the result of applying FUN to the corresponding element of list. If a dataframe is passed it will be coerced to list via as.list
+
+```{r lapplyFunction, echo=TRUE}
+class(lapply(pfizer_subset_df, mean))
+lapply(pfizer_subset_df, mean)
+```
+
+### lapply with user defined function
+
+A user defined function to plot a data.
+```{r plotFun, echo=TRUE}
+plot_fun = function(input)
+  plot(input, col = 'blue',
+       main = paste("plot of", names(input), sep = "-"))
+```
+
+Let us plot Closed and Adjusted Closed Values of Pfizer.
+```{r applywithUserFun, echo=TRUE}
+library(xts)
+PFE = pfizer_df[,c("Date", "Close","Adj.Close")]
+PFE_TS = xts(PFE[,-1], order.by=as.Date(PFE[,1], "%m/%d/%Y"))
+lapply(PFE_TS, plot_fun)
+```
+
+### sapply
+
+**sapply()** is wrapper class to lapply with difference being it returns vector or matrix instead of list object.
+```{r sapplyFunction, echo=TRUE}
+#class(sapply(pfizer_df_subset_df, mean))
+sapply(pfizer_subset_df, mean)
+```
+
+### tapply
+
+tapply() is a very powerful function that lets you break a vector into pieces and then apply some function to each of the pieces. 
+
+In the below code, first each of Adj.Close in pfizer_df data is grouped by Month and then mean() function is calculated.
+
+```{r tapplyFunction, echo=TRUE}
+tapply(pfizer_df$Adj.Close,pfizer_df$Month, mean)
+```
+
+The data type of the object is
+
+```{r tapplyClass, echo=TRUE}
+class(tapply(pfizer_df$Adj.Close,pfizer_df$Month, mean))
+```
+
+## Central Limit Theorem
+
+**This is optional topic.** We will use the pfizer_df data for the demo.
+```{r CltCalculateReturn, echo=TRUE}
+#Calculating Monthly return as a random variable
+nrows = nrow(pfizer_df)
+returns = c()
+Closes = pfizer_df$Adj.Close
+for (i in 1:(nrows-1)) {
+  returns[i+1] = (Closes[i+1] - Closes[i]) / Closes[i]
+}
+returns[1] = returns[2]
+pfizer_df$Return = returns
+```
+
+
+```{r CltPlot, echo=TRUE, message=FALSE, warning=FALSE}
+library(car) #for qqPlot
+#To show normal distribution using pfizer_df data
+
+par(mfrow=c(1,3)) # to make three plot on same row
+hist(pfizer_df$Adj.Close,
+     breaks = 30,
+     col = colors()[30:50],
+     main = "Monthly Closes of PFE",
+     xlab = "Adj Close Price",
+     las = 1)
+
+#Plotting Monthly return
+hist(pfizer_df$Return,
+     breaks = 30,
+     col = colors()[30:50],
+     main = "Monthly Closes of PFE",
+     xlab = "Monthly Return",
+     las = 1)
+
+qqPlot(pfizer_df$Return,
+       main = "Are the return normal",
+       pch = 20, cex = 0.7, col="navy")
+```
+
+See the observation with return actually zero
+
+```{r return0, echo=TRUE}
+knitr::kable(head(subset(pfizer_df, pfizer_df$Return == 0)))
+```
+
+See the observation of the return between plus/minus one sigma
+
+```{r plusminusSigma, echo=TRUE}
+mu = mean(pfizer_df$Return)
+sigma = sd(pfizer_df$Return)
+knitr::kable(head(subset(pfizer_df,Return>= (mu-sigma) & Return <= (mu+sigma))))
+```
+
+Subset the data to get the records with return between 10 percent and 15 percent
+```{r return1015, echo=TRUE}
+knitr::kable(head(subset(pfizer_df,Return>= 0.1 & Return <= 0.15)))
+```
+
+
+## Thank you
+
+Practice on the exercises given and redo all the example codes given here using R.

@@ -1,0 +1,520 @@
+---
+title: "Titanic Exploration"
+author: |
+  | "Kumar Rahul
+  |
+  | kumarrah@iimb.ac.in; rahul235@gmail.com
+output:
+  bookdown::html_document2:
+    toc: TRUE 
+    toc_depth: 4
+    toc_float: TRUE
+    fig_width: 7
+    fig_height: 5
+    fig_caption: TRUE
+    number_sections: TRUE
+footer: AwesomeStats Consulting Pvt Ltd
+---
+
+## Importing library
+
+```{r}
+library(dplyr)
+library(magrittr)
+```
+
+# Case - Titanic Dataset
+
+The data has been taken from : https://www.kaggle.com/c/titanic/data
+
+The data description:
+
+
+> * PassengerId: type should be integers
+* Survived: Survived or Not
+* Pclass: Class of Travel
+* Name: Name of Passenger
+* Sex: Gender
+* Age: Age of Passengers
+* SibSp: Number of Sibling/Spouse aboard
+* Parch: Number of Parent/Child aboard
+* Ticket
+* Fare
+* Cabin
+* Embarked: The port in which a passenger has embarked. C - Cherbourg, S - Southampton, Q = Queenstown
+
+We will use the titanic dataset to understand data load and munging using R base
+
+## Read the dataset, which is in csv format
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+
+setwd("/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+```
+
+```{r}
+getwd()
+```
+
+```{r}
+titanic_df = read.csv('./files/titanic.csv', stringsAsFactors = TRUE)
+```
+
+Data type of titanic dataframe
+```{r}
+class(titanic_df)
+```
+
+## Print the first few rows
+head() also takes an argument n, which specifies how many records will be printed.
+
+```{r}
+head(titanic_df)
+```
+
+```{r}
+tail(titanic_df,10)
+```
+
+## Statistical Summary
+
+Use `summary` method
+
+```{r}
+summary(titanic_df)
+```
+
+summary of a individual vraibale
+```{r}
+summary(titanic_df$Survived)
+```
+
+Dimensions of the data
+```{r}
+dim(titanic_df)
+```
+
+## Indexing and Slicing
+
+> Select first n rows across all columns
+
+```{r}
+titanic_df[,]
+```
+
+```{r}
+titanic_df[1:5,1:3]
+```
+
+> Select first 4 rows and first 3 columns
+
+```{r}
+titanic_df[1:4,1:3]
+```
+
+> Select first 2 columns of the last row
+
+```{r}
+titanic_df[nrow(titanic_df),c(1:2)]
+```
+
+## Check the data type
+
+> * Data type
+* dimensions.. how many row and columns?
+* Structure of the data
+
+Dimensions of data
+
+```{r}
+dim(titanic_df)
+```
+
+How many total entries? What are the columns and their types. Each column has how many not-null values?
+
+Structure of Data
+
+```{r}
+str(titanic_df)
+```
+
+Structure of specific column
+
+```{r}
+str(titanic_df$Sex)
+```
+
+### Select Specific columns and rows¶
+
+> * Select the Survived column and display the first 5 entries
+* How many people survived and what is the percentage?
+
+```{r}
+titanic_df[c('Survived')][1:10,]
+```
+
+```{r}
+head(titanic_df[c('Survived')],10)
+```
+
+```{r}
+class(titanic_df$Survived[0:5])
+```
+
+How many passengers survived and how many did not survive
+```{r}
+table(titanic_df$Survived)
+```
+
+The other way
+```{r}
+table(titanic_df[['Survived']])
+```
+
+What percentage of passengers survived
+```{r}
+prop.table(table(titanic_df$Survived))
+```
+
+
+```{r}
+prop.table(table(titanic_df[['Survived']]))
+```
+
+## Selecting multiple columns. 
+
+Multiple column names should be provided as a collection
+
+```{r}
+head(titanic_df[c('Survived','Age')])
+
+titanic_df[c('Survived','Age')][1:6,]
+```
+
+## Cross tabulation of data
+
+> * Pivot gender with survived
+
+```{r}
+table(titanic_df$Sex,titanic_df$Survived)
+```
+
+Percentage as row sum
+```{r}
+prop.table(table(titanic_df$Sex,titanic_df$Survived),1)
+```
+
+Percentage as column sum
+```{r}
+prop.table(table(titanic_df$Sex,titanic_df$Survived),2)
+```
+
+Percentage as overall sum
+```{r}
+prop.table(table(titanic_df$Sex,titanic_df$Survived))
+```
+
+## Condition based filters
+
+* How many children below 5 years age were on board the ship?
+```{r}
+new_df = titanic_df[ which(titanic_df$Age <=5), ]
+dim(new_df)[1]
+```
+
+* How many children survived who are less than 5 years old?
+```{r}
+table(titanic_df[ which(titanic_df$Age <= 5), ]$Survived)
+```
+
+```{r}
+dim(titanic_df[which(titanic_df$Age <=5 & 
+                    titanic_df$Survived ==1),])
+```
+
+## Get unique values for a column
+
+> How many embark points were there? dataframe.unique() lists unique values of the column
+
+```{r}
+unique(titanic_df$Sex)
+```
+
+## Working with NA Values
+
+> How many NA values in "Embarked" columns
+
+```{r}
+table(titanic_df$Embarked)
+```
+
+## Drop NA: Strategy
+
+
+```{r}
+clean_titanic_df = na.omit(titanic_df)
+dim(clean_titanic_df)
+```
+
+## Rename a Column
+
+> Rename "Embarked" column to "onboarded"
+> Rename "Sex" column to "Gender"
+
+```{r}
+head(titanic_df,2)
+```
+
+```{r}
+colnames(titanic_df) = sub('Embarked', 'onboarded', colnames(titanic_df))
+
+colnames(titanic_df) = sub('Sex', 'Gender', colnames(titanic_df))
+```
+
+```{r}
+head(titanic_df,2)
+```
+
+## Apply filter criteria and Select columns based
+
+> Select Age, Gender and Pclass of passengers who survived and where less than 5 years old
+
+```{r}
+head(titanic_df[ which(titanic_df$Age <= 5 & 
+              titanic_df$Survived ==1), ][c('Age','Gender','Pclass')])
+```
+
+> Only age, sex, survived and pclass of passengers whose age are not known
+
+```{r}
+dim(titanic_df[ is.na(titanic_df$Age), ])
+```
+
+> Only age, sex, survived and pclass of passengers whose age are known
+
+```{r}
+dim(titanic_df[ !is.na(titanic_df$Age), ][c('Age','Gender','Pclass')])
+new_titanic_df = (titanic_df[ !is.na(titanic_df$Age), ][c('Age','Gender','Pclass')])
+head(new_titanic_df)
+```
+
+
+## Groupby and Aggregate
+
+> Find the average age of passengers based on Pclass column
+
+```{r}
+tapply(new_titanic_df$Age,new_titanic_df$Pclass, mean)
+```
+
+```{r}
+summary(titanic_df$Age)
+```
+
+## Groupby and Aggregate - dplyr
+
+> Find the average age of passengers based on Pclass column
+
+```{r}
+titanic_df %>% group_by(Pclass) %>% summarize(Avg_Age = mean(Age, na.rm=TRUE))
+```
+
+The overall average age of passengers:
+
+```{r}
+mean(titanic_df$Age, na.rm = TRUE)
+```
+
+> Find the average age of passengers based on Pclass and Gender
+
+```{r}
+
+pclass_gender_age_df = titanic_df %>% group_by(Pclass,Gender) %>% summarize(Avg_Age = mean(Age, na.rm=TRUE))
+
+pclass_gender_age_df
+```
+
+> How many passengers survived in each of the pclass and for each of the gender
+
+```{r}
+
+pclass_gender_sur_df = titanic_df %>% group_by(Pclass,Gender) %>% summarize(Survived_Count = sum(Survived, na.rm=TRUE))
+
+pclass_gender_sur_df
+```
+
+Calculate the summary statistics i.e. count of observations, average age and standard deviation by Pclass.
+```{r}
+group_titanic_df = titanic_df %>% group_by(Pclass)
+
+titanic_summary = summarise(group_titanic_df,
+  count = n(),
+  avg_age = mean(Age, na.rm = TRUE),
+  sd_month = sd(Age, na.rm = TRUE))
+```
+
+## Merge Dataframe
+
+> Merge pclass_gender_age_df with pclass_gender_sur_df based on pclass and Gender
+
+https://www.infoworld.com/article/3454356/how-to-merge-data-in-r-using-r-merge-dplyr-or-datatable.html
+
+```{r}
+pclass_gender_merge_df = inner_join(pclass_gender_age_df,
+                                    pclass_gender_sur_df,
+                                    by = c('Pclass','Gender')
+)
+
+pclass_gender_merge_df
+```
+
+> Sort the pclass_gender_merge_df on Survived_Count column
+
+```{r}
+pclass_gender_merge_df %>% arrange(desc(Survived_Count))
+```
+
+Save the merged dataframe
+```{r}
+#write.csv(pclass_gender_merge_df, "merged_df.csv")
+```
+
+### Exercise: 
+
+Using `pclass_gender_merge_df` do a visualization of Age and Survived w.r.t Pclass and Sex. What kind of charts will be meaningful here?
+
+```{r}
+# Write your code here.
+```
+
+## Creating Feature set (X) and Outcome Variable (Y)
+
+```{r}
+get_predictors = function(df) {
+  predictors = colnames(df)[!colnames(df) %in% c('Survived')]
+  return (predictors)
+}
+
+get_response = function(df) {
+  response = colnames(df)[!colnames(df) %in% predictors]
+  return (response)
+}
+```
+
+```{r}
+predictors = get_predictors(titanic_df)
+predictors
+response = get_response(titanic_df)
+response
+```
+
+## Get the categorical and numeric features
+
+Create a list of categorical and numeric features in a dataset:
+
+```{r}
+cat_feat_list = list(colnames(titanic_df[predictors][sapply(titanic_df[predictors], is.factor)]))
+
+typeof(cat_feat_list)
+
+class(cat_feat_list)
+
+cat_feat_list = unlist(cat_feat_list)
+
+typeof(cat_feat_list)
+cat_feat_list
+```
+
+
+```{r}
+num_feat_list = (colnames(titanic_df[predictors][sapply(titanic_df[predictors], is.numeric)]))
+
+typeof(num_feat_list)
+class(num_feat_list)
+num_feat_list
+```
+
+## User defined functions
+
+Create user defined functions
+
+> Define a function to find NA values and unique labels in any column
+
+```{r}
+find_na = function(name){
+  return(table(titanic_df[,name]))
+}
+```
+
+```{r}
+find_unique = function(name){
+  return(unique(titanic_df[,name]))
+}
+```
+
+```{r}
+find_na('Gender')
+find_unique('Gender')
+```
+
+Define a function to perform cross tabulation
+
+```{r}
+cross_tab = function(x,y){
+  return (table(titanic_df[,x],titanic_df[,y]))
+}
+```
+
+```{r}
+df = cross_tab('Gender','Pclass')
+df
+```
+
+## Exercise 1: 
+
+1. Use the user defined function `find_na` and `find_unique` to get the value count and unique labels of all the categorical features in the titanic dataframe
+
+```{r}
+cat_feat_list
+```
+
+```{r}
+cat_feat_list = append(cat_feat_list, "Survived")
+cat_feat_list = cat_feat_list[!cat_feat_list %in% c('Name','Ticket','Cabin')]
+cat_feat_list
+```
+
+```{r}
+sapply(cat_feat_list,find_na)
+sapply(cat_feat_list, find_unique)
+```
+
+## Exercise 2:
+
+2. Use the user defined function `cross_tab` to cross tabulate every pair of categorical features. 
+
+Dataframe for every pair of categorical feature is as follows
+
+```{r}
+df = expand.grid(cat_feat_list,cat_feat_list,stringsAsFactors = FALSE)
+df
+```
+
+Pivot of the unqiue combination of categorical feature is as follows:
+
+```{r}
+
+for (i in 1:nrow(df)){
+  if(df[i,"Var1"] != df[i,"Var2"]){
+    cat("Pivot of", df[i,"Var1"]," with ", df[i,"Var2"], "\n")
+    print(cross_tab(df[i,"Var1"],df[i,"Var2"]))
+  }
+}
+```
+
+## Exercise 3: DIY
+
+3. Change the cross_tab function to generate pivots by nomalized values of rows (i.e. percentage by row sum)and columns (i.e percentage by column sum).
+
+## Thank You

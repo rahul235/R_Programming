@@ -1,0 +1,435 @@
+---
+title: "R Package for data clean up and aggregation"
+author: |
+  | "Kumar Rahul
+  |
+  | kumarrah@iimb.ac.in; rahul235@gmail.com
+output:
+  bookdown::html_document2:
+    toc: TRUE 
+    toc_depth: 4
+    toc_float: TRUE
+    fig_width: 7
+    fig_height: 5
+    fig_caption: TRUE
+    number_sections: TRUE
+footer: AwesomeStats Consulting Pvt Ltd
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+
+setwd("/Users/Rahul/Documents/Rahul Office/IIMB/Work @ IIMB/Training Material/Concepts/R/R_Programming")
+```
+
+# Data Table in R
+
+This is an introduction to data.table package for faster read, write and data manipulation on huge volume of data. However, we are using a simple dataset to demonstrate the package functions. The same functions can be used on any other dataset.
+
+## IPL Dataset Description
+
+The Indian Premier League (IPL) was a professional league for Twenty20 (T20) cricket championships that   was started in 2008 in India. The IPL was initiated by the BCCI with eight franchises comprising players from across the world. The first IPL auction was held in 2008 for ownership of the teams for 10 years, with a base price of USD 50 million. The franchises acquired players through an English auction that was conducted every year. However, there were several rules imposed by the IPL. For example, there is a maximum cap on the money a franchise can spend on buying players.
+The performance of the players could be measured through several metrics. Although the IPL followed the Twenty20 format of the game, it was possible that the performance of the players in the other formats of the game such as Test and One-Day matches could influence player pricing. A few players had excellent records in Test matches, but their records in Twenty20 matches were not very impressive. The dataset consists of performance of 130 players measured through various performance metrics such as batting strike rate, economy rate and so on.  The list features is provided in Table 2.3.
+
+|Data Code|Description|
+|---|:---|
+|AGE|Age of the player at the time of auction classified into 3 categories. Category 1 (L25) means the player is less than 25 years old, 2 means that the age is between 25 and 35 years (B25- 35)and category 3 means that the age is more than 35 (A35).|
+|RUNS S|	Number of runs scored by a player|
+|RUNS C|	Number of runs conceded by a player|
+|HS|	Highest score by a batsman in IPL|
+|AVE B|	Average runs scored by a batsman in IPL|
+|AVE BL|	Bowling average (Number of runs conceded / number of wickets taken) in IPL.|
+|SR B|	Batting strike rate (ratio of the number of runs scored to the number of balls faced) in IPL|
+|SR BL|	Bowling strike rate (ratio of the number of balls bowled to the number of wickets taken) in IPL|
+|SIXERS|	Number of six runs scored by a player in IPL|
+|WKTS|	Number of wickets taken by a player in IPL|
+|ECON|	Economy rate of a bowler (number of runs conceded by the bowler per over) in IPL|
+|CAPTAINCY EXP|Captained either an T20 team or a national team|
+|ODI SR B|	Batting strike rate in One Day Internationals|
+|ODI SR BL|	Bowling strike rate in One Day Internationals|
+|ODI RUNS S|Runs scored in One Day Internationals|
+|ODI WKTS|	Wickets taken in One Day Internationals|
+|T RUNS S|	Runs scored in Test matches|
+|T WKTS|	Wickets taken in Test matches|
+|PLAYER SKILL|Player’s primary skill (batsman, bowler, or all-rounder)|
+|COUNTRY|Country of origin of the player (AUS: Australia; IND: India; PAK: Pakistan; SA: South Africa; SL: Sri Lanka; NZ: New Zealand; WI: West Indies; OTH: Other countries)|
+|YEAR A|	Year of Auction in IPL|
+|IPL TEAM|	Team(s) for which the player had played in the IPL (CSK: Chennai Super Kings; DC: Deccan Chargers; DD: Delhi Daredevils; KXI: Kings XI Punjab; KKR: Kolkata Knight Riders; MI: Mumbai Indians; PWI: Pune Warriors India; RR: Rajasthan Royals; RCB: Royal Challengers Bangalore). A + sign was used to indicate that the player had played for more than one team. For example, CSK+ would mean that the player had played for CSK as well as for one or  more other teams.|
+
+### Invoke packages
+
+Load the packages in memory.
+
+```{r message=FALSE, warning=FALSE}
+library(data.table)
+library(ggplot2)
+```
+
+### Read data
+
+We are going to use `fread` function from `data.table` for loading the file in R platform. The first four parameters of `fread()` can be used to read files of different types. We have put the description of these four parameters from the help section of `fread()`:
+
+You can take read about all the arguments of `fread()` by typing `?fread` on the R Studio console.
+
+```{r}
+ipl_dt = fread(file='./files/IPL.csv', #the only mandatory argument which needs to be passed.
+               na.strings = c("","#NA", "NA"),
+               stringsAsFactors=FALSE, #this is TRUE by default in read.table()
+               data.table=getOption("data.table.fread.data.table", TRUE),
+               logical01=getOption("data.table.logical01", FALSE))
+
+colnames(ipl_dt) <- gsub(" ", "_", colnames(ipl_dt))
+knitr::kable(ipl_dt[1:5,1:7])
+```
+
+### Structure of data.table
+
+The advantage of working with data.table over a data.frame is that, we can perform a lot of querying from within the data.table unlike data.frame where we can only subset rows and select columns. The basic form of data.table is as depicted in figure below:
+
+![image](DT_Image_1.png "data.table Query Structure")
+
+where "DT" is the name of the variable created using `fread()`. In our case, we have named it `ipl_dt`. 
+
+We can read the above figure as:
+
+** "Take data.table `DT`: subset rows by `i` then either select column `j` or perform some operations on column `j` and groupby `by` some other `columns`.** 
+
+The full description of arguments of data.table can be seen by using `?data.table` on the RStudio console.
+
+We will perform data wrangling using `data.table` to understand the teams composition based on the players statistics. 
+
+### Basic operation
+
+We will look into few basic instructions. The first six observations
+
+```{r}
+knitr::kable(head(ipl_dt))
+```
+
+The last six observation
+```{r}
+knitr::kable(tail(ipl_dt))
+```
+
+Structure `str()`, shows the data types and the first few observations for each feature in the data set.
+
+```{r}
+str(ipl_dt)
+```
+
+`summary()` is used to get the basic summary of all the features in the dataset.
+
+```{r}
+summary(ipl_dt)
+```
+
+We can use `setnames()` from `data.table` package to rename any column. We will rename `RUNS_S` to `PAST_RUNS_IPL` and `WKTS` to `PAST_WKT_IPL`
+
+```{r}
+setnames(ipl_dt,c('RUNS_S','WKTS'),
+         c('PAST_RUNS_IPL','PAST_WKT_IPL'))
+```
+
+### Basic row subset operations
+
+In a `data.table`, we can subset rows in i by using logical expressions, row numbers and `order()`. We are taking specific query and applying it on the `data.table` to show basic operation which can be performed on a `data.table`. 
+
+Select fifth and fourth row
+```{r}
+knitr::kable(ipl_dt[5:4])
+```
+
+`ipl_dt[5:4,]` will also result in the above outcome. Comma (`,`) is optional. To select all rows expect rows 2 to 5
+
+```{r}
+knitr::kable(head(ipl_dt[!2:5]))
+```
+
+The below syntax can also be used to perform the above operation.
+
+```{r}
+knitr::kable(head(ipl_dt[-(2:5)]))
+```
+
+Let us `order` the dataset by `COUNTRY` and show the first six records.
+
+```{r}
+knitr::kable(head(ipl_dt[order(COUNTRY,decreasing = FALSE)]))
+```
+
+Select all the rows where test match runs scored by the player is greated than 5000
+
+```{r}
+knitr::kable(head(ipl_dt[T_RUNS>5000]))
+```
+
+
+### Basic column subset operations
+In `data.table`, select or compute on column can be performed with ease. The below coded chunk will return a column (`PLAYING_ROLE`) as a vector.
+
+```{r}
+ipl_dt[,(PLAYING_ROLE)]
+```
+
+We can return the result as a `data.table` with the below code:
+
+```{r}
+ipl_dt[,.(ROLE = head(PLAYING_ROLE))]
+```
+
+`.()` is just an alias for `list`. This means that we can name columns within `.()` as we can while creating a `list`.
+
+Combined price paid by the franchises in the auction, based on this sample dataset, was 6.7 million dollars.
+
+```{r}
+ipl_dt[,sum(SOLD_PRICE)]
+```
+
+To get the unique list of countries who send thier players for T20 and the count of players from those countries
+
+```{r}
+ipl_dt[,table(COUNTRY)]
+```
+
+To display the first five rows of the dataset with `PLAYER_NAME`, `AGE` , `COUNTRY` and `TEAM`
+
+```{r}
+ipl_dt[1:5, .(PLAYER_NAME,AGE,COUNTRY,TEAM)]
+```
+
+### The `:=` operator
+
+`data.table` provides `:=` operator which can be used to add/update/delete a column. Note that this can be used only on column `j` but can be combined with the the querying syntax of `data.table` i.e. `DT[i,j, by + other arguments]`. The syntax for `:=` is `L.H.S := R.H.S`
+
+> * LHS takes a character vector of column names and RHS a list of values.
+
+So to add a new column `TOTAL_WKTS`, we can write
+
+```{r}
+knitr::kable(head(ipl_dt[,c('TOTAL_WKTS') := PAST_WKT_IPL + T_WKTS]))
+```
+
+The other way to write the same.
+
+```{r}
+knitr::kable(head(ipl_dt[,':=' ('TOTAL_WKTS' =PAST_WKT_IPL+T_WKTS,
+                   'TOTAL_RUNS' = PAST_RUNS_IPL+T_RUNS
+                  )]))
+```
+
+Let's delete column `Ln(soldp)`
+
+```{r}
+knitr::kable(head(ipl_dt[,c('Ln(soldp)') := NULL]))
+```
+
+We can use the `:=` operator to replace values in a column. Assume, where ever the strike rate of the bowlers in T20 cricket is zero, we want to replace that value with the strike rate of the bowlers, in their ODI matches. We just have one such case in `ipl_dt`.
+
+```{r}
+knitr::kable(ipl_dt[PLAYING_ROLE =='Bowler' & SR_BL==0])
+```
+
+
+```{r}
+knitr::kable(head(ipl_dt[(SR_BL ==0),SR_BL:= ODI_SR_BL]))
+```
+
+### Basic row and column select | compute operations
+
+To get the list of all the players from Australia, South Africa, Sri Lanka or Pakistan in the top four teams of IPL 2011, the regular expression will be `ipl_dt[Team == '<>' and (COUNTRY == 'SA' |COUNTRY == 'AUS')]`. 
+
+```{r}
+knitr::kable(head(ipl_dt[TEAM == 'CSK' & (COUNTRY == 'AUS' | COUNTRY == 'SA' | COUNTRY == 'SL'| COUNTRY == 'PAK')]))
+```
+
+To get the total wickets for each team
+```{r}
+knitr::kable(ipl_dt[c("CSK",'MI','KKR','RCB') , .(TOTAL_WKTS=sum(PAST_WKT_IPL)),  by=.EACHI, on=.(TEAM)])
+```
+
+Based on this sample data, it seems that the previous experience level of bowlers contributed to the teams performance in IPL 2011 as well. 
+
+How many wickets were taken by players from the top four nations (based on number of players playing in IPL season) representing `CSK`?
+
+```{r}
+knitr::kable(ipl_dt[.('CSK', c('AUS','SA','SL','PAK')), .(TOTAL_WKTS =sum(PAST_WKT_IPL)),  by=.EACHI, on= .(TEAM,COUNTRY), nomatch= NULL])
+```
+
+Out of 202 as the combined number of wickets taken by players of CSK team, 113 wickets were taken by players from `AUS` and `SA`. Let us get the list of bowlers from the these two nations who were playing for `CSK`
+
+```{r}
+knitr::kable(head(ipl_dt[TEAM == 'CSK' & (COUNTRY == 'AUS' | COUNTRY == 'SA') & (PLAYING_ROLE !='W.Keeper' & PLAYING_ROLE !='Batsman')]))
+```
+
+###  Groupby operations
+
+The tabulation of data based on the the feature list can be done within the `data.table`. We can compute the average wicket taken by the players in past IPL appearances as below.
+
+```{r}
+knitr::kable(ipl_dt[TEAM == "KXIP", .(AVG_T20_WKTS = mean(PAST_WKT_IPL))])
+```
+
+Let's calculate the average number of T20 wickets taken by players grouped by `AGE` and `PLAYING_ROLE`
+
+```{r}
+knitr::kable(ipl_dt[, .(AVERAGE_WKT_T20 = mean(PAST_WKT_IPL)), by=.(AGE, PLAYING_ROLE)])
+```
+
+### .N Operator
+
+How many players where auctioned in the year 2009 and who are still with CSK
+
+```{r}
+knitr::kable(ipl_dt[TEAM == 'CSK' & AUCTION_YEAR == 2009, length(AUCTION_YEAR)])
+```
+
+The above query can also be written with `.N` which a built in symbol and holds the number of observation in the current group.
+
+```{r}
+knitr::kable(ipl_dt[TEAM == 'CSK' & AUCTION_YEAR == 2009, .N])
+```
+
+Let’s get the total number of players for each country, team pair for a particular playing role “Bowler”.
+
+```{r}
+bowler_count_dt = ipl_dt[PLAYING_ROLE == "Bowler", .N, by = .(COUNTRY, TEAM)]
+
+knitr::kable(head(bowler_count_dt))
+```
+
+The `by` argument of `data.table` can take column names as well as expressions. If we want to get the count of players who have taken more than 5 wickets in T20 cricket, more than 10 wickets in one day international matches and more than 20 wickets in test cricket
+
+```{r}
+knitr::kable(ipl_dt[, .N, by = .(T20_5W = PAST_WKT_IPL>5 , ODI_10W=ODI_WKTS>10, TEST_20W=T_WKTS>20)])
+```
+
+The first row corresponds to `T20_5W >5 = TRUE` , `ODI_10W>10 = FALSE`, `TEST_20W>20=FALSE` and the total number of records satisfying this criteria is 15 players. In case, we want to get the count which satisfies all the three conditions at the same time, we can re-write the query as
+
+
+```{r}
+ipl_dt[, .N, by = .(Condition = PAST_WKT_IPL>5&ODI_WKTS>10&T_WKTS>20)]
+```
+
+### .SD Operator
+
+Another useful built in symbol in `data.table` is `.SD` which stands for subset of data. 
+
+`.SD` in itself is a `data.table` which holds the data of the subset defined using `by` argument of `data.table`. Below table demonstrate the use of .SD to print the `data.table`.
+
+```{r}
+knitr::kable(head(ipl_dt[,(.SD), by = Sl_NO]))
+```
+
+`.SD` symbol can be used with lapply() function to iterate through multiple columns at the same time and compute the statistics which we are interested to calculate. 
+
+Let's calculate the average numner of wickets taken and average number of runs scored by the players in all the three formats of the game. For doing this:
+
+1. We have used lapply() to iterate through the columns.
+2. We have grouped the players by `AGE`, `PLAYING_ROLE`. Instead of using `by`, we have used `keyby` which returns an ordered set.
+3. We have passed the column names on which we will want to compute the average statistics in `.SDcols`
+
+`.SDcols` is optional, however in this situation lapply will throw an error as the dataset also contains `character` columns and computing mean does not hold true for character variables.
+
+```{r}
+knitr::kable(ipl_dt[, lapply(.SD, mean), keyby = .(AGE, PLAYING_ROLE), .SDcols = c('PAST_WKT_IPL','ODI_WKTS','T_WKTS','PAST_RUNS_IPL', 'ODI_RUNS_S','T_RUNS')])
+```
+
+### Keys and binary search based subset
+
+The use of `keys` in `data.table` makes `data.table` much more efficient in subsetting and in handling subsequent downstream activities. `keys` can be intutively thought of as a `row.names` of data.frame with the expection that:
+
+1. Keys can be set on multiple columns and the columns can be of different data types.
+2. Uniqueness in not enforced in keys
+
+Setting keys in a `data.table`
+
+1. Re-arranges the rows based on the column names provided as keys. The ordering is always in a ascending order.
+2. Marks the columns used as key as `key columns` by setting an attribute called sorted to the data.table.
+
+A point to note while using keys is that the query structure does not change. This means that all the querying which we looked into in previous sections can still be done using `keys` with an advantage that it wil be much more faster and efficient while dealing with large dataset. 
+
+Let's us set `COUNTRY` and `TEAM` as keys in `ipl_dt`
+
+```{r}
+setkey(ipl_dt, COUNTRY, TEAM)
+knitr::kable(head(ipl_dt))
+```
+
+We can notice that `ipl_dt` is ordered in ascending order of COUNTRY and then by TEAM. We can subset the ipl_dt by COUNTRY or TEAM or a combination of both. Let's subset the data to filter out players from Australia and playing for Chennai Super Kings
+
+```{r}
+knitr::kable(ipl_dt[.('AUS', 'CSK')])
+```
+
+In the above subset query, `AUS` was looked for in the first key column `COUNTRY`. Within the matching rows for `AUS`, `CSK` is matched against the second key column `TEAM`. Since we did not provide any operation on j, the query returned all columns corresponding to those row indices. 
+
+Let's get the number of wickets taken by players who are from Sri Lanka and playing for Mumbai Indians.
+
+```{r}
+knitr::kable(ipl_dt[.('SL', 'MI'), .(WICKETS_TAKEN=c(PAST_WKT_IPL)), keyby = PLAYING_ROLE])
+```
+
+### Join operations
+
+To merge two dataframes, data.table querying syntax with `on` argument can be used. 
+
+The argument`on`, is the common column or a `key` in dataframes and should be present in both the dataframes. 
+
+1. `X[Y, on=*]`: look up X’s rows using Y's column name provided using `on=*` or key values of Y, as an index. This returns all the rows from Y with matching records from X.
+
+2. `Y[X, on=*]`: look up Y’s rows using X's column name provided using `on=*` or key values of X, as an index. This returns all the rows from X with matching records from Y.
+
+Dataframes can be joined based on multiple common columns. The join type can be of inner, outer, left or right joins and should be specified in the how parameter. 
+
+For understanding different joins, please refer to the examples given at https://www.w3schools.com/sql/sql_join.asp
+
+Let's create two `data.table` representing Chennai Super Kings and Mumbai Indians. We have set `COUNTRY` and `TEAM` as keys.
+
+```{r}
+setkey(ipl_dt,COUNTRY, TEAM)
+```
+
+Selecting the players from CSK based on just the key named `TEAM`.
+
+```{r}
+ipl_csk_dt = ipl_dt[.('CSK'), on ='TEAM']
+knitr::kable(head(ipl_csk_dt))
+```
+
+The key for `ipl_csk_dt` will be same as that of `ipl_dt` i.e. `COUNTRY` and `TEAM`. In case, we want to a different key for `ipl_csk_dt`, we will have to use the `keyby` argument. 
+
+However, `keyby` or `by` expects column `j` to be provided. We can use the built in operator `.SD` to pass all the columns or provide a specific column names. The query will look like. 
+
+```{r}
+ipl_csk_dt = ipl_dt[.('CSK'),.(TEAM, COUNTRY,SOLD_PRICE) ,on ='TEAM',keyby=.(AGE,PLAYING_ROLE)]
+
+knitr::kable(head(ipl_csk_dt))
+```
+
+Selecting the players from `MI` who are from `IND`. Note the difference between how the key was used for `ipl_csk_dt` and `ipl_mi_dt`
+```{r}
+ipl_mi_dt = ipl_dt[.('MI'),.(TEAM,COUNTRY,SOLD_PRICE),on=c('TEAM'), keyby=.(AGE,PLAYING_ROLE)]
+knitr::kable(head(ipl_mi_dt))
+```
+
+Let's join `ipl_csk_dt` with `ipl_mi_dt` using their keys. When we write `ipl_csk_dt[ipl_mi_dt]`, the join operation is going to look up `ipl_csk_dt` using the `AGE` and `PLAYING_ROLE` keys of `ipl_mi_dt`. 
+
+```{r}
+knitr::kable(head(ipl_csk_dt[ipl_mi_dt]))
+```
+
+We can supress the `NA` records and it will be similar to inner join. The resultant `data.table` will be:
+
+```{r}
+knitr::kable(head(ipl_csk_dt[ipl_mi_dt, nomatch=NULL]))
+```
+
+What if we want to join the two `data.tables` with a column name which is not set as a `key`? This can be done by explictley passing the column name in `on=*` argument. Say, we want to join `ipl_csk_dt` with `ipl_mi_dt` based on the country name present in `ipl_mi_dt`
+
+```{r}
+knitr::kable(head(ipl_csk_dt[ipl_mi_dt, on=.(COUNTRY), nomatch=NULL]))
+```
+
+## Thank you
+
+Practice on the exercises given and redo all the example codes given here using R.
